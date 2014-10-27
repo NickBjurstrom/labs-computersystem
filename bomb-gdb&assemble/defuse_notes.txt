@@ -1,0 +1,136 @@
+My solution:
+First:
+linux> objdump -d bomb > bomb.s
+linux> objdump -t bomb > bomb.t 
+r solution : when using gdb debugger, read from file solution.
+
+1)phase_1
+
+we just type the same string as stored at 0x402448
+
+ 4012b5: e832000000      callq 4012ec <strings_not_equal>
+ 4012ba:85c0                test   %eax,%eax
+ 4012bc:7405                je    4012c3 <phase_1+0x17>
+
+
+>gdb file bomb
+> break 73
+> run solution
+> set step-mode on
+> next
+> step
+> x/s 0x402448
+The moon unit will be divided into two divisions.
+
+2) phase_2
+
+ a. in read_six_numbers:
+  401504: be7e254000      mov    $0x40257e,%esi
+ 401509: b800000000      mov    $0x0,%eax
+ 40150e: e8 b5 f5 ff ff       callq 400ac8 <__isoc99_sscanf@plt>
+ 401513:83f805            cmp    $0x5,%eax
+ 401516:7f05                jg    40151d <read_six_numbers+0x3d>
+  401518: e88d ff ff ff       callq 4014aa <explode_bomb>
+  8049011:89ec                mov    %ebp,%esp
+
+ called __isoc99_sscanfto put numbers we entered into an array,string stored at 0x40257e
+%d %d %d %d %d %d
+
+b. in phase_2
+ 40105d:833c2400          cmpl   $0x0,(%rsp)
+  401061:7507                jne   40106a <phase_2+0x1b>
+ 401063:837c240401      cmpl   $0x1,0x4(%rsp)
+ 401068:7405                je    40106f<phase_2+0x20>
+  40106a: e83b040000      callq 4014aa <explode_bomb>
+  40106f:4889e5             mov    %rsp,%rbp
+
+so the initial value in is 0, 1
+
+c. in phase_2
+ 40108e:4839eb             cmp    %rbp,%rbx
+rbp = rsp + 0x18( rsp + 24)
+rbx initial rsp + 8, every time rbi increase 4, so loop 4 times.
+
+d. in phase_2
+ 40107b:8b43fc             mov   -0x4(%rbx),%eax
+ 40107e:0343f8             add   -0x8(%rbx),%eax
+so a[2] = a[0] + a[1]
+
+so the six number is 0 1 1 2 3 5 
+
+
+3） phase_3
+about switch
+
+a. ox40247a
+  use x/s 0x40247a    “%d %c %d"
+
+b. jumptable  *0x4024a0(,%rax,8)
+x/20xw 0x4024a0
+
+0x4024a0 <__dso_handle+472>: 0x004011a7 0x00000000 0x004011c9 0x00000000
+0x4024b0 <__dso_handle+488>: 0x004011e6 0x00000000 0x00401203 0x00000000
+0x4024c0 <__dso_handle+504>: 0x00401222 0x00000000 0x0040123a 0x00000000
+0x4024d0 <__dso_handle+520>: 0x00401255 0x00000000 0x00401270 0x00000000
+0x4024e0 <array.3330>: 0x0000000a 0x00000002 0x0000000e 0x00000007
+
+4011ac:817c2408c70000cmpl   $0xc7,0x8(%rsp)   so 0x8(%rsp) = 0xc7 = 199
+
+ 4011bf: b861000000      mov    $0x61,%eax
+ 40129c:3a442407          cmp   0x7(%rsp),%al  so 0x7(%rsp) = 0x61 = 97 = a
+
+so the result is 0 a 199
+
+
+4) phase_4
+about recursion
+
+func4 recurse 4 times return 11.
+0xc(%rsp) = 0,
+0xc(%rsp) = 8
+
+so 0 11
+
+5) phase_5
+
+cltq  convert eax to quad words
+
+(gdb) print $rsi
+$6 = 4203744
+(gdb) x/20xd 4203744
+0x4024e0 <array.3330>: 10 2 14 7
+0x4024f0 <array.3330+16>: 8 12 15 11
+0x402500 <array.3330+32>: 0 4 1 13
+0x402510 <array.3330+48>: 3 9 6 5
+0x402520: 1635151433 543451500 1935763568 175318373
+
+edx initial 1, end with 15 , loop for 14 time,
+ecx = 115
+so 5 115.
+
+
+6)  phase_6
+3 5 2 6 1 4,
+  input 6 number, start with 6 nodes unsorted, use this numbers to sort the nodes, in descending order, otherwise explode. 
+
+7) secret phase
+
+in phase_defused:
+
+mov    $0x40254e,%esi    :”%d %d %s"
+mov    $0x604410,%edi    :”0 11” the answer of phase 4
+mov    $0x402557,%esi    :"DrEvil"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
