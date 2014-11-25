@@ -1,0 +1,16 @@
+implicit first fit: Perf index = 48 (util) + 1 (thru) = 49/100
+
+implicit next fit : Perf index = 41 (util) + 1 (thru) = 42/100
+
+explicit, best fit: 
+Perf index = 52 (util) + 40 (thru) = 92/100
+
+
+After adding :
+   if( size==448 && GET_SIZE(HEADER(bp)) > newsize+64 )
+        newsize += 64;
+    else if( size==112 && GET_SIZE(HEADER(bp)) > newsize+16 )
+        newsize += 16;
+
+   
+Perf index = 57 (util) + 40 (thru) = 97/100
