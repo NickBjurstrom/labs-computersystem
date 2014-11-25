@@ -1,0 +1,1186 @@
+***********************
+The CS Lab
+Directions to Students
+***********************
+
+1. datalab
+#####################################################################
+# CS:APP Data Lab
+# Directions to Instructors
+#
+# May 31, 2011: Now includes the "Beat the Prof" contest
+#
+# Copyright (c) 2002-2011, R. Bryant and D. O'Hallaron
+######################################################################
+
+This directory contains the files that you will need to run the CS:APP
+Data Lab, which helps develops the student's understanding of bit
+representations, two's complement arithmetic, and IEEE floating point.
+
+For fun, we've also provided a new user-level HTTP-based "Beat the
+Prof" contest that replaces the old email-based version. The new
+contest is completely self-contained and does not require root
+password.  The only requirement is that you have a user account on a
+Linux machine with an IP address.
+
+************
+1. Overview
+************
+
+In this lab, students work on a C file, called bits.c, that consists
+of a series of programming "puzzles".  Each puzzle is an empty
+function body that must be completed so that it implements a specified
+mathematical function, such as "absolute value". Students must solve
+the non-floating point puzzles using only straight-line C code and a
+restricted set of C arithmetic and logical operators. For the
+floating-point puzzles they can use conditionals and arbitrary
+operators.
+
+Students use the following three tools to check their work.
+Instructors use the same tools to assign grades.
+
+1. dlc: A "data lab compiler" that checks each function in bits.c for
+compliance with the coding guidelines, checking that the students use
+less than the maximum number of operators, that they use only
+straight-line code, and that they use only legal operators. The
+sources and a Linux binary are included with the lab.
+
+2. btest: A test harness that checks the functions in bits.c for
+correctness. This tool has been significantly improved, now checking
+wide swaths around the edge cases for integers and floating point
+representations such as 0, Tmin, denorm-norm boundary, and inf.
+
+3. driver.pl: A autograding driver program that uses dlc and btest to
+check each test function in bits.c for correctness and adherence to
+the coding guidelines
+
+The default version of the lab consists of 15 puzzles, in
+./src/selections.c, chosen from a set of 73 standard puzzles defined
+in the directory ./src/puzzles/. You can customize the lab from term
+to term by choosing a different set of puzzles from the standard set
+of puzzles.
+
+You can also define new puzzles of your own and add them to the
+standard set. See ./src/README for instructions on how to add new
+puzzles to the standard set.
+
+NOTE: If you define new puzzles, please send them to me (Dave
+O'Hallaron, droh@cs.cmu.edu) so that I can add them to the standard
+set of puzzles in the data lab distribution.
+
+********
+2. Files
+********
+
+All CS:APP labs have the same simple top-level directory structure:
+
+Makefile	   Builds the entire lab.
+README		   This file.
+src/		   Contains all source files for the lab.
+datalab-handout/   Handout directory that goes to the students. Generated
+		   by the Makefile from files in ./src. Never modify anything
+		   in this directory. 
+grade/		   Autograding scripts that instructors can use to 
+		   grade student handins.
+writeup/	   Sample Latex lab writeup.
+contest/           Everything needed for the optional "Beat the Prof" contest.
+
+********************
+3. Building the Lab
+*******************
+
+Step 0. If you decide to run the "Beat the Prof" contest (section 5),
+then edit the ./contest/Contest.pm file so that the driver knows where
+to send the results. See ./contest/README for the simple
+instructions. If you decide *not* to offer the contest, then do
+nothing in this step.
+
+Step 1. Select the puzzles you want to include by editing the file
+./src/selections.c.
+
+The default ./src/selections.c comes from a previous instance of the
+Data Lab at CMU.  The file ./src/selections-all.c contains the
+complete list of puzzles to choose from.
+
+Step 2. Modify the Latex lab writeup in ./writeup/datalab.tex to 
+tailor it for your course. 
+
+Step 3. Type the following in the current directory:
+     unix> make clean
+     unix> make 
+
+The Makefile generates the btest source files, builds the dlc binary
+(if necessary), formats the lab writeup, and then copies btest, the
+dlc binary, and the driver to the handout directory.  After that, it
+builds a tarfile of the handout directory (in ./datalab-handout.tar)
+that you can then hand out to students.
+
+Note on Binary Portability: dlc is distributed in the datalab-handout
+directory as a binary. Linux binaries are not always portable across
+distributions due to different versions of dynamic libraries. You'll
+need to be careful to compile dlc on a machine that is compatible with
+those that the students will be using.
+
+Note: Running "make" also automatically generates the solutions to the
+puzzles, which you can find in ./src/bits.c and ./src/bits.c-solution.
+
+
+******************
+4. Grading the Lab
+******************
+
+There is a handy autograder script that automatically grades your
+students' handins.  See ./grade/README for instructions.
+
+**************************
+5. "Beat the Prof" Contest
+**************************
+
+For fun, we've included an optional "Beat the Prof" contest, where
+students compete against themselves and the instructor. The goal is to
+solve each Data Lab puzzle using the fewest number of
+operators. Students who match or beat the instructor's operator count
+for each puzzle are winners. See ./contest/README for the simple
+instructions on how to set up the contest.
+
+NOTE: The contest is completely optional. Whether you decide to
+offer it or not has no affect on how you build and distribute the lab.
+
+NOTE: If you do decide to offer the contest, then you should configure
+the contest *before* you build the lab, so that the driver knows the
+server and port to send the contest results of each student (using the
+constants defined in the ./src/Driverhdrs.pm file, which is
+autogenerated from the ./contest/Contest.pm config file).
+
+If you decide to offer the contest *after* you've built and handed out
+the lab to the students, you're still OK:
+
+1) Configure the contest as described in contest/Makefile
+
+2) Rebuild the lab in the usual way:
+   linux> cd datalab
+   linux> make
+
+3) Distribute the new ./src/Driverhdrs.pm file to the students.
+
+
+***************************
+6. Experimental BDD checker
+***************************
+
+For fun, we have included an experimental correctness checker based on
+binary decision diagrams (BDDs) (R. E. Bryant, IEEE Transactions on
+Computers, August, 1986) that uses the CUDD BDD package from the
+University of Colorado. The BDD checker does an exhaustive test of the
+test functions in bits.c, formally verifying the correctness of each
+test function against a reference solution for *ALL* possible input
+values. For functions that differ from the reference solution, the BDD
+checker produces a counterexample in the form of a set of function
+arguments that cause the test solution to differ from the reference
+solution.
+
+The sources are included in ./src/bddcheck. To compile:
+
+  unix> cd src/bddcheck
+  unix> make clean
+  unix> make
+
+To use BDDs to check ./src/bits.c for correctness:
+
+  unix> cd src
+  unix> ./bddcheck/check.pl     # with error messages and counterexamples
+  unix> ./bddcheck/check.pl -g  # compact tabular output with no error messages
+
+Note that check.pl must be run from the parent directory of ./bddcheck.
+
+We've been using this BDD checker instead of btest at CMU for several
+years and the code appears to be stable. The main weakness is in the
+Perl code that extracts the functions from bits.c. It usually works,
+but some things -- such as calls to other functions, or functions that
+don't end with a single brace -- confuse it. So we're reluctant to
+make it the default checker for the distributed CS:APP labs. However,
+if you have any questions about the correctness of a particular
+solution, then this is the authoritative way to decide.
+
+Please send any comments about the BDD checker to randy.bryant@cs.cmu.edu.
+
+
+2. bomblab
+#######################################################
+# CS:APP Bomb Lab
+# Directions to Instructors
+#
+# Copyright (c) 2002-2013, R. Bryant and D. O'Hallaron
+#
+#######################################################
+
+This directory contains the files that you will use to build and run
+the CS:APP Bomb Lab. The Bomb Lab teaches students principles of
+machine-level programs, as well as general debugger and reverse
+engineering skills.
+
+***********
+1. Overview
+***********
+
+----
+1.1. Binary Bombs
+----
+A "binary bomb" is a Linux executable C program that consists of six
+"phases." Each phase expects the student to enter a particular string
+on stdin.  If the student enters the expected string, then that phase
+is "defused."  Otherwise the bomb "explodes" by printing "BOOM!!!".
+The goal for the students is to defuse as many phases as possible.
+
+
+----
+1.2. Solving Binary Bombs
+----
+In order to defuse the bomb, students must use a debugger, typically
+gdb or ddd, to disassemble the binary and single-step through the
+machine code in each phase. The idea is to understand what each
+assembly statement does, and then use this knowledge to infer the
+defusing string.  Students earn points for defusing phases, and they
+lose points (configurable by the instructor, but typically 1/2 point)
+for each explosion. Thus, they quickly learn to set breakpoints before
+each phase and the function that explodes the bomb. It's a great
+lesson and forces them to learn to use a debugger.
+
+----
+1.3. Autograding Service
+----
+We have created a stand-alone user-level autograding service that
+handles all aspects of the Bomb Lab for you: Students download their
+bombs from a server. As the students work on their bombs, each
+explosion and defusion is streamed back to the server, where the
+current results for each bomb are displayed on a Web "scoreboard."
+There are no explicit handins and the lab is self-grading.
+
+The autograding service consists of four user-level programs that run
+in the main ./bomblab directory:
+
+- Request Server (bomblab-requestd.pl). Students download their bombs
+and display the scoreboard by pointing a browser at a simple HTTP
+server called the "request server." The request server builds the
+bomb, archives it in a tar file, and then uploads the resulting tar
+file back to the browser, where it can be saved on disk and
+untarred. The request server also creates a copy of the bomb and its
+solution for the instructor.
+
+- Result Server (bomblab-resultd.pl). Each time a student defuses a
+bomb phase or causes an explosion, the bomb sends a short HTTP
+message, called an "autoresult string," to an HTTP "result server,"
+which simply appends the autoresult string to a "scoreboard log file."
+
+- Report Daemon (bomblab-reportd.pl). The "report daemon" periodically
+scans the scoreboard log file. The report daemon finds the most recent
+defusing string submitted by each student for each phase, and
+validates these strings by applying them to a local copy of the
+student's bomb.  It then updates the HTML scoreboard that summarizes
+the current number of explosions and defusions for each bomb, rank
+ordered by the total number of accrued points.
+
+- Main daemon (bomblab.pl). The "main daemon" starts and nannies the
+request server, result server, and report deamon, ensuring that
+exactly one of these processes (and itself) is running at any point in
+time. If one of these processes dies for some reason, the main daemon
+detects this and automatically restarts it. The main daemon is the
+only program you actually need to run.
+
+********
+2. Files
+********
+The ./bomblab directory contains the following files:
+
+Makefile                - For starting/stopping the lab and cleaning files
+bomblab.pl*             - Main daemon that nannies the other servers & daemons
+Bomblab.pm              - Bomblab configuration file    
+bomblab-reportd.pl*     - Report daemon that continuously updates scoreboard
+bomblab-requestd.pl*    - Request server that serves bombs to students
+bomblab-resultd.pl*     - Result server that gets autoresult strings from bombs
+bomblab-scoreboard.html - Real-time Web scoreboard
+bomblab-update.pl*      - Helper to bomblab-reportd.pl that updates scoreboard
+bombs/                  - Contains the bombs sent to each student
+log-status.txt          - Status log with msgs from various servers and daemons
+log.txt                 - Scoreboard log of autoresults received from bombs
+makebomb.pl*            - Helper script that builds a bomb
+scores.txt              - Summarizes current scoreboard scores for each student
+src/                    - The bomb source files
+writeup/                - Sample Latex Bomb Lab writeup
+
+*******************
+3. Bomb Terminology
+*******************
+
+LabID: Each instance (offering) of the lab is identified by a unique
+name, e.g., "f12" or "s13", that the instructor chooses. Explosion and
+diffusions from bombs whose LabIDs are different from the current
+LabID are ignored. The LabID must not have any spaces.
+
+BombID: Each bomb in a given instance of the lab has a unique
+non-negative integer called the "bombID."
+
+Notifying Bomb: A bomb can be compiled with a NOTIFY option that
+causes the bomb to send a message each time the student explodes or
+defuses a phase. Such bombs are called "notifying bombs." 
+
+Quiet Bomb: If compiled with the NONOTIFY option, then the bomb
+doesn't send any messages when it explodes or is defused. Such bombs
+are called "quiet bombs."
+
+We will also find it helpful to distinguish between custom and
+generic bombs:
+
+Custom Bomb: A "custom bomb" has a BombID > 0, is associated with a
+particular student, and can be either notifying or quiet. Custom
+notifying bombs are constrained to run on a specific set of Linux
+hosts determined by the instructor. On the other hand, custom quiet
+bombs can run on any Linux host.
+
+Generic Bomb: A "generic bomb" has a BombID = 0, isn't associated with
+any particular student, is quiet, and hence can run on any host.
+
+************************
+4. Offering the Bomb Lab
+************************
+There are two basic flavors of Bomb Lab: In the "online" version, the
+instructor uses the autograding service to handout a custom notifying
+bomb to each student on demand, and to automatically track their
+progress on the realtime scoreboard. In the "offline" version, the
+instructor builds, hands out, and grades the student bombs manually,
+without using the autograding service.
+
+While both version give the students a rich experience, we recommend
+the online version. It is clearly the most compelling and fun for the
+students, and the easiest for the instructor to grade. However, it
+requires that you keep the autograding service running non-stop,
+because handouts, grading, and reporting occur continuously for the
+duration of the lab. We've made it very easy to run the service, but
+some instructors may be uncomfortable with this requirement and will
+opt instead for the offline version.
+
+Here are the directions for offering both versions of the lab.
+
+---
+4.1. Create a Bomb Lab Directory 
+---
+Identify the generic Linux machine ($SERVER_NAME) where you will
+create the Bomb Lab directory (./bomblab) and, if you are offering the
+online version, run the autograding service. You'll only need to have
+a user account on this machine. You don't need root access.
+
+Each offering of the Bomb Lab starts with a clean new ./bomblab
+directory on $SERVER_NAME. For example:
+
+    linux> tar xvf bomblab.tar
+    linux> cd bomblab   
+    linux> make cleanallfiles
+
+---
+4.2 Configure the Bomb Lab
+---
+Configure the Bomb Lab by editing the following file:
+
+./Bomblab.pm - This is the main configuration file. You will only need
+to modify or inspect a few variables in Section 1 of this file. Each
+variable is preceded by a descriptive comment. If you are offering the
+offline version, you can ignore most of these settings.
+
+If you are offering the online version, you will also need to edit the 
+following file:
+
+./src/config.h - This file lists the domain names of the hosts that
+notifying bombs are allowed to run on. Make sure you update this
+correctly, else you and your students won't be able to run your bombs.
+
+----
+4.3. Update the Lab Writeup
+---
+
+Once you have updated the configuration files, modify the Latex lab
+writeup in ./writeup/bomblab.tex for your environment. Then type the
+following in the ./writeup directory:
+
+	unix> make clean
+	unix> make 
+
+This will create ps and pdf versions of the writeup
+
+---
+4.4. Running the Online Bomb Lab
+---
+
+------
+4.4.1. Short Version
+------
+From the ./bomblab directory:
+
+(1) Reset the Bomb Lab from scratch by typing
+    linux> make cleanallfiles
+
+(2) Start the autograding service by typing
+    linux> make start
+
+(3) Stop the autograding service by typing
+    linux> make stop    
+
+You can start and stop the autograding service as often as you like
+without losing any information. When in doubt "make stop; make start"
+will get everything in a stable state. 
+
+However, resetting the lab deletes all old bombs, status logs, and the
+scoreboard log. Do this only during debugging, or the very first time
+you start the lab for your students.
+
+Students request bombs by pointing their browsers at 
+    http://$SERVER_NAME:$REQUESTD_PORT/
+
+Students view the scoreboard by pointing their browsers at      
+    http://$SERVER_NAME:$REQUESTD_PORT/scoreboard 
+
+------
+4.4.2. Long Version
+------
+
+(1) Resetting the Bomb Lab. "make stop" ensures that there are no
+servers running. "make cleanallfiles" resets the lab from scratch,
+deleting all data specific to a particular instance of the lab, such
+as the status log, all bombs created by the request server, and the
+scoreboard log. Do this when you're ready for the lab to go "live" to
+the students.
+
+Resetting is also useful while you're preparing the lab. Before the
+lab goes live, you'll want to request a few bombs for yourself, run
+them, defuse a few phases, explode a few phases, and make sure that
+the results are displayed properly on the scoreboard.  If there is a
+problem (say because you forgot to update the list of machines the
+bombs are allowed to run in src/config.h) you can fix the
+configuration, reset the lab, and then request and run more test
+bombs.
+
+CAUTION: If you reset the lab after it's live, you'll lose all your
+records of the students bombs and their solutions. You won't be able
+to validate the students handins. And your students will have to get
+new bombs and start over.
+
+(2) Starting the Bomb Lab. "make start" runs bomblab.pl, the main
+daemon that starts and nannies the other programs in the service,
+checking their status every few seconds and restarting them if
+necessary:
+
+(3) Stopping the Bomb Lab. "make stop" kills all of the running
+servers. You can start and stop the autograding service as often as
+you like without losing any information. When in doubt "make stop;
+make start" will get everything in a stable state.
+
+Request Server: The request server is a simple special-purpose HTTP
+server that (1) builds and delivers custom bombs to student browsers
+on demand, and (2) displays the current state of the real-time
+scoreboard.
+
+A student requests a bomb from the request daemon in two
+steps: First, the student points their favorite browser at
+
+    http://$SERVER_NAME:$REQUESTD_PORT/
+
+For example, http://foo.cs.cmu.edu:15213/.  The request server
+responds by sending an HTML form back to the browser.  Next, the
+student fills in this form with their user name and email address, and
+then submits the form. The request server parses the form, builds and
+tars up a notifying custom bomb with bombID=n, and delivers the tar
+file to the browser. The student then saves the tar file to disk. When
+the student untars this file, it creates a directory (./bomb<n>) with
+the following four files:
+
+    bomb*        Notifying custom bomb executable
+    bomb.c       Source code for the main bomb routine
+    ID           Identifies the student associated with this bomb
+    README       Lists bomb number, student, and email address
+
+
+The request server also creates a directory (bomblab/bombs/bomb<n>)
+that contains the following files:
+
+    bomb*        Custom bomb executable 
+    bomb.c       Source code for main routine
+    bomb-quiet*  A quiet version of bomb used for autograding
+    ID           Identifies the user name assigned to this bomb
+    phases.c     C source code for the bomb phases
+    README       Lists bombID, user name, and email address
+    solution.txt The solution for this bomb
+
+
+Result Server: Each time a student defuses a phase or explodes their
+bomb, the bomb sends an HTTP message (called an autoresult string) to
+the result server, which then appends the message to the scoreboard
+log. Each message contains a BombID, a phase, and an indication of the
+event that occurred.  If the event was a defusion, the message also
+contains the "defusing string" that the student typed to defuse the
+phase.
+
+Report Daemon: The report daemon periodically scans the scoreboard log
+and updates the Web scoreboard. For each bomb, it tallies the number
+of explosions, the last defused phase, validates each last defused
+phase using a quiet copy of the bomb, and computes a score for each
+student in a tab delimited text file called "scores.txt." The update
+frequency is a configuration variable in Bomblab.pm.
+
+Instructors and students view the scoreboard by pointing their
+browsers at:
+
+    http://$SERVER_NAME:$REQUESTD_PORT/scoreboard 
+
+------
+4.4.3. Grading the Online Bomb Lab
+------
+The online Bomb Lab is self-grading. At any point in time, the
+tab-delimited file (./bomblab/scores.txt) contains the most recent
+scores for each student. This file is created by the report daemon
+each time it generates a new scoreboard.
+
+------
+4.4.4. Additional Notes on the Online Bomb Lab
+------
+* Since the request server and report daemon both need to execute
+bombs, you must include $SERVER_NAME in the list of legal machines in
+your bomblab/src/config.h file.
+
+* All of the servers and daemons are stateless, so you can stop ("make
+stop") and start ("make start") the lab as many times as you like
+without any ill effects. If you accidentally kill one of the daemons,
+or you modify a daemon, or the daemon dies for some reason, then use
+"make stop" to clean up, and then restart with "make start". If your
+Linux box crashes or reboots, simply restart the daemons with "make
+start".
+
+* Information and error messages from the servers are appended to the
+"status log" in bomblab/log-status.txt. Servers run quietly, so they
+can be started from initrc scripts at boot time.
+
+* See src/README for more information about the anatomy of bombs and
+how they are constructed. You don't need to understand any of this to
+offer the lab. It's provided only for completeness.
+
+* Before going live with the students, we like to check everything out
+by running some tests. We do this by typing
+
+    linux> make cleanallfiles   
+    linux> make start
+
+Then we request a bomb for ourselves by pointing a Web browser at
+
+    http://$SERVER_NAME:$REQUESTD_PORT
+
+After saving our bomb to disk, we untar it, copy it to a host in the
+approved list in src/config.h, and then explode and defuse it a couple
+of times to make sure that the explosions and diffusion are properly
+recorded on the scoreboard, which we check at
+
+    http://$SERVER_NAME:$REQUESTD_PORT/scoreboard
+
+Once we're satisfied that everything is OK, we stop the lab
+
+    linux> make stop
+
+and then go live:
+
+    linux> make cleanallfiles
+    linux> make start
+        
+Once we go live, we type "make stop" and "make start" as often as we
+need to, but we are careful never to type "make cleanallfiles" again.
+
+----
+4.5. Running the Offline Bomb Lab
+----
+In this version of the lab, you build your own quiet bombs manually
+and then hand them out to the students.  The students work on defusing
+their bombs offline (i.e., independently of any autograding service)
+and then handin their solution files to you, each of which you grade
+manually.
+
+You can use the makebomb.pl script to build your own bombs
+manually. The makebomb.pl script also generates the bomb's solution.
+Type "./makebomb.pl -h" to see its arguments.
+
+Option 1: The simplest approach for offering the offline Bomb Lab is
+to build a single generic bomb that every student attempts to defuse:
+
+    linux> ./makebomb.pl -s ./src -b ./bombs
+
+This will create a generic bomb and some other files in ./bombs/bomb0: 
+
+    bomb*        Generic bomb executable (handout to students)
+    bomb.c       Source code for main routine (handout to students)
+    bomb-quiet*  Ignore this
+    ID           Ignore this
+    phases.c     C source code for the bomb phases
+    README       Ignore this    
+    solution.txt The solution for this bomb 
+
+You will handout only two of these files to the students: ./bomb and ./bomb.c 
+
+The students will handin their solution files, which you can validate
+by feeding to the bomb:
+
+    linux> cd bombs/bomb0
+    linux> ./bomb < student_solution.txt
+
+This option is easy for the instructor, but we don't recommend it
+because it is too easy for the students to cheat.
+
+Option 2. The other option for offering an offline lab is to use the
+makebomb.pl script to build a unique quiet custom bomb for each
+student:
+
+    linux> ./makebomb.pl -i <n> -s ./src -b ./bombs -l bomblab -u <email> -v <uid>
+
+This will create a quiet custom bomb in ./bombs/bomb<n> for the
+student whose email address is <email> and whose user name is <uid>:
+
+    bomb*        Custom bomb executable (handout to student)
+    bomb.c       Source code for main routine (handout to student)
+    bomb-quiet*  Ignore this
+    ID           Identifies the student associated with this bomb
+    phases.c     C source code for the bomb phases
+    README       Lists bomb number, student, and email address
+    solution.txt The solution for this bomb
+
+You will handout four of these files to the student: bomb, bomb.c, ID,
+and README.
+
+Each student will hand in their solution file, which you can validate
+by hand by running their custom bomb against their solution:
+
+    linux> cd ./bombs/bomb<n>
+    linux> ./bomb < student_n_solution.txt
+
+For both Option 1 and Option 2, the makebomb.pl script randomly
+chooses the variant ("a", "b", or "c") for each phase. You can tell
+makebomb.pl to use a specific variant by using the "-p" option. For
+example, "-p abacba" will use variant "a" for phase 1, variant "b" for
+phase 2, variant "a" for phase 3, variant "c" for phase 4, and so on.
+
+The source code for the different phase variants is in ./src/phases/.
+
+
+
+3. buflab
+#####################################################################
+# CS:APP Buffer Lab
+# Directions to Instructors
+#
+# Copyright (c) 2002-2012, R. Bryant and D. O'Hallaron
+#
+######################################################################
+
+This directory contains the files that you will use to build and run
+the CS:APP Buffer Lab.
+
+The purpose of the Buffer Lab is to help students develop a detailed
+understanding of the stack discipline on IA32 processors.  It involves
+applying a series of buffer overflow attacks on an executable file.
+
+This version of the lab has been specially modified to defeat the
+stack randomization techniques used by newer versions of Linux. It
+works by using mmap() and an assembly language insert to move the
+stack pointed at by %esp to an unused part of the heap.
+
+***********
+1. Overview
+***********
+
+----
+1.1. Buffer Bombs
+----
+
+A "buffer bomb" is an executable bomb, called "./bufbomb", that is
+solved using a buffer overflow attack (exploit).  In this lab,
+students are asked to alter the behavior of a buffer bomb (called
+bufbomb) via five increasingly difficult levels of exploits.
+
+The levels are called smoke (level 0), fizz (level 1), bang (level 2),
+boom (level 3), and kaboom (level 4), with smoke being the simplest
+and kaboom being the most difficult. 
+
+----
+1.2. Solving Buffer Bombs
+----
+Each exploit involves reading a sequence of bytes from standard input
+into a buffer stored on the stack. Students encode each exploit string
+as a sequence of hex digit pairs separated by whitespace, where each
+hex digit pair represents a byte in the exploit string. The program
+"hex2raw" converts these strings into a sequence of raw bytes, which
+can then fed to the buffer bomb:
+ 
+    unix> cat exploit.txt | ./hex2raw | ./bufbomb -u <userid>
+
+Each student works on an identical buffer bomb, but the solution to
+the individual phases is a function of each student's userid.  Thus,
+students must develop the solution on their own and cannot use the
+solutions from other students.
+
+The solution to each phase is unique for each student because it
+typically involves the manipulation on the runtime stack of a unique
+"cookie" computed from the userid by the "makecookie" program:
+
+    unix> ./makecookie bovik
+    0x1005b2b7
+	
+The lab writeup has extensive details on each phase and solution
+techniques.
+
+----
+1.3. Autograding Service 
+----
+
+We have provided the same stand-alone user-level autograding service
+used by the Bomb Lab to handle all aspects of the Buffer Lab for
+you. Students download their buffer bombs from a server. As the
+students work on their bombs, they can submit successful exploit
+strings to the server by running the buffer bomb with "-s" argument:
+
+    unix> cat exploit.txt | ./hex2raw | ./bufbomb -u <userid> -s
+
+The current results for each bomb are displayed on a Web "scoreboard."
+As with the Bomb Lab there are no explicit handins and the lab is
+self-grading.
+
+The autograding service consists of four user-level programs that run
+in the main ./buflab directory:
+
+- Request Server. Students download their bombs and display the
+scoreboard by pointing a browser at a simple HTTP server called the
+"request server." 
+
+- Result Server. Each time a student submits an exploit string 
+the buffer bomb sends a short HTTP message, called an "autoresult
+string," to an HTTP "result server," which simply appends the
+autoresult string to a "scoreboard log file."
+
+- Report Daemon. The "report daemon" periodically scans the scoreboard
+log file. The report daemon finds the most recent exploit string
+submitted by each student for each phase, and validates these strings
+by applying them to a local copy of the buffer bomb (unlike the Bomb
+Lab, each student works on the same buffer bomb).  It then updates the
+HTML scoreboard that summarizes phases that have been successfully
+solved for each bomb (identified by cookie to protect the student
+privacy), rank ordered by the number of solved levels.
+
+To avoid infinite loops during validation, the Report Daemon calls
+each bufbomb in autograding mode, using the -g flag. This causes the
+bomb to timeout after 5 seconds.
+
+- Main daemon. The "main daemon" starts and nannies the request
+server, result server, and report deamon, ensuring that exactly one of
+these processes (and itself) is running at any point in time. If one
+of these processes dies for some reason, the main daemon detects this
+and automatically restarts it. The main daemon is the only program
+you actually need to run.
+
+
+********
+2. Files
+********
+The ./buflab directory contains the following files:
+
+Makefile                - For starting/stopping the lab and cleaning files
+buflab-handout/         - Contains the files handed out to each student
+buflab.pl*              - Main daemon that nannies the other servers & daemons
+Buflab.pm               - Buflab configuration file    
+buflab-reportd.pl*      - Report daemon that continuously updates scoreboard
+buflab-requestd.pl*     - Request server that serves bombs to students
+buflab-resultd.pl*      - Result server that gets autoresult strings from bombs
+buflab-scoreboard.html  - Real-time Web scoreboard
+buflab-update.pl*       - Helper to buflab-reportd.pl that updates scoreboard
+handin/                 - Most recent exploits from each student and each level
+log-status.txt          - Status log with msgs from various servers and daemons
+log.txt                 - Scoreboard log of autoresults received from bombs
+makebomb.pl*            - Program that builds a buffer bomb
+scores.txt              - Summarizes current scoreboard scores for each student
+src/                    - The buffer bomb source files, including a master 
+						- solver in ./src/solve the automatically generates 
+						- a solution string for any userid and level. 	
+writeup/                - Sample Latex Buffer Lab writeup
+
+**************************
+3. Buffer Bomb Terminology
+**************************
+Notifying Bomb: A buffer bomb can be compiled with a NOTIFY option
+that allows the student to submit successful exploit strings to the
+autograding service. Such bombs are called "notifying bombs."
+
+Quiet Bomb: A buffer bomb that is not a notifying bomb is called a
+"quiet bomb."
+
+Cookie: Unlike the Bomb Lab, each student works on the same
+binary. However, the solution to each phase is different for each
+student because the exploit string typically must contain a 32-bit
+"cookie" that is computed from the student's userid.
+
+**************************
+4. Offering the Buffer Lab
+**************************
+As with the Bomb Lab, there are two basic flavors of the Buffer Lab:
+In the "online" version, the instructor uses the autograding service
+to handout buffer bombs to each student on demand (each student gets
+the same bomb program), and to automatically track their progress on
+the realtime scoreboard. In the "offline" version, the instructor
+builds, hands out, and grades the student bombs manually, without
+using the autograding service.
+
+While both versions give the students a rich experience, we recommend
+the online version. It is clearly the most compelling and fun for the
+students, and the easiest for the instructor to grade. However, it
+requires that you keep the autograding service running non-stop,
+because handouts, grading, and reporting occur continuously for the
+duration of the lab. We've made it very easy to run the service, but
+some instructors may be uncomfortable with this requirement and will
+opt instead for the offline version.
+
+Here are the directions for offering both versions of the lab.
+
+---
+4.1. Create a Buffer Lab Directory 
+---
+
+Identify the generic Linux machine ($SERVER_NAME) where you will
+create the Buffer Lab directory (./buflab) and, if you are offering
+the online version, run the autograding service. You'll only need a
+user account on this machine. You don't need root access. Any desktop
+with an internet connection will do.
+
+Each offering of the Buffer Lab starts with a clean new ./buflab
+directory on $SERVER_NAME. For example:
+
+    linux> tar xvf buflab.tar
+    linux> cd buflab
+    linux> make cleanallfiles
+
+---
+4.2 Configure the Buffer Lab
+---
+Configure the Buffer Lab by editing the following file:
+
+./Buflab.pm - This is the main configuration file. You will only need
+to modify or inspect a few variables in Section 1 of this file. Each
+variable is preceded by a descriptive comment. If you are offering the
+offline version, you can ignore all of these settings.
+
+If you are offering the online version, you will also need to edit the 
+following file:
+
+./src/config.h - This file lists the domain names of the hosts that
+notifying bombs are allowed to submit results from.  Make sure you
+update this correctly, else you and your students won't be able to
+submit their results.  You should include $SERVER_NAME in this list,
+along with any machines that your students will be submitting from.
+
+----
+4.3. Update the Lab Writeup
+---
+Once you have updated the configuration files, modify the Latex lab
+writeup in ./writeup/buflab.tex for your environment. Then type the
+following in the ./writeup directory:
+
+	unix> make clean
+	unix> make 
+
+This will create ps and pdf versions of the writeup
+
+---
+4.4. Running the Online Buffer Lab
+---
+
+------
+4.4.1. Short Version
+------
+From the ./buflab directory:
+
+(1) Reset the Buffer Lab from scratch by typing
+    linux> make cleanallfiles
+
+(2) Start the autograding service by typing
+    linux> make start
+
+(3) Stop the autograding service by typing
+    linux> make stop    
+
+You can start and stop the autograding service as often as you like
+without losing any information. When in doubt "make stop; make start"
+will get everything in a stable state. 
+
+However, resetting the lab ("make cleanallfiles") deletes all handin
+strings, status logs, and the scoreboard log. Do this only during
+debugging, or the very first time you start the lab for your students.
+
+The ./src/solve directory contains a master solver script called
+./solve.pl that you can use to automatically generate a nicely
+commented solution exploit string for any userid and phase. See
+./src/solve/README for details.
+
+The ./handin directory contains the most recent exploit string
+received from each userid and each phase
+
+    <userid>-<level>-exploit.txt
+
+as well as a report showing the result from the validation
+
+    <userid>-<level>-report.txt
+
+Students request bombs by pointing their browsers at 
+    http://$SERVER_NAME:$REQUESTD_PORT/
+
+Students submit their successful exploit strings to the grading
+service by calling the bufbomb with the -s option:
+
+    linux> cat exploit_string | ./hex2raw | ./bufbomb -u bovik -s 	
+
+Students view the scoreboard by pointing their browsers at      
+    http://$SERVER_NAME:$REQUESTD_PORT/scoreboard 
+
+------
+4.4.2. Long Version
+------
+
+(1) Resetting the Buffer Lab. "make cleanallfiles" resets the lab from
+scratch, deleting all data specific to a particular instance of the
+lab, such as the status log, the scoreboard log, and the handin
+file. Do this when you're ready for the lab to go "live" to the
+students.
+
+Resetting is also useful while you're preparing the lab. Before the
+lab goes live, you'll want to request a few bombs for yourself, run
+them, defuse a few phases, explode a few phases, and make sure that
+the results are displayed properly on the scoreboard.  If there is a
+problem (say because you forgot to update the list of machines the
+bombs are allowed to run in src/config.h) you can fix the
+configuration, reset the lab, and then request and run more test
+bombs.
+
+CAUTION: If you reset the lab after it's live, you'll lose all your
+records of the students handins. You'll have to ask them to submit
+their results again.
+
+(2) Starting the Buffer Lab. "make start" runs buflab.pl, the main
+daemon that starts and nannies the other programs in the service,
+checking their status every few seconds and restarting them if
+necessary:
+
+(3) Stopping the Buffer Lab. "make stop" kills all of the running
+servers. You can start and stop the autograding service as often as
+you like without losing any information. When in doubt "make stop;
+make start" will get everything in a stable state.
+
+Request Server: The request server is a simple special-purpose HTTP
+server that (1) builds and delivers buffer bombs to student browsers
+on demand, and (2) displays the current state of the real-time
+scoreboard.
+
+A student requests a bomb from the request daemon by pointing their
+favorite browser at
+
+    http://$SERVER_NAME:$REQUESTD_PORT/
+
+The request server makes the buflab-handout directory (if necessary),
+tars it up, and delivers the tar file to the browser. The student then
+saves the tar file to disk. When the student untars this file, it
+creates a directory (./buflab-handout) with the following three binary
+files:
+
+    bufbomb*     Notifying custom bomb executable
+    hex2raw*     Converts a hex-encoded exploit string to a byte stream
+    makecookie*  Computes the cookie associated with a userid.
+
+The request server also makes sure that there are bufbomb, hex2raw,
+and makecookie binaries in the ./buflab/src directory.
+
+Result Server: Each time a student submits an exploit string, the
+buffer bomb sends an HTTP "autoresult string" to the result server,
+which then appends the message to the scoreboard log. Each autoresult
+string contains the userid, level, and exploit string.
+
+Report Daemon: The report daemon periodically scans the scoreboard log
+(log.txt) and updates the scoreboard (buflab-scoreboard.txt). For each
+userid, it validates the most recently received exploit string, and
+updates the scoreboard.  The update frequency is a configuration
+variable in Buflab.pm.
+
+Instructors and students view the scoreboard by pointing their
+browsers at:
+
+    http://$SERVER_NAME:$REQUESTD_PORT/scoreboard 
+
+------
+4.4.3. Grading the Online Buffer Lab
+------
+The online Buffer Lab is self-grading. At any point in time, the
+tab-delimited file "./buflab/scores.txt" contains the most recent
+scores for each student. This file is created by the report daemon
+each time it generates a new scoreboard.
+
+The autograding service also updates the ./buflab/handin directory,
+which contains information that will be very helpful to you when
+students have questions about their submissions, especially when 
+they submit solutions that passed their bufbomb but failed when 
+evaluated by the grading server (common for the nitro phase). 
+
+For each student (userid), it keeps the last exploit string they
+submitted for each phase (0-4) in a file called
+
+    <userid>-<level>-exploit.txt
+
+along with a report file called
+
+    <userid>-<level>-report.txt 
+
+that shows the output from the buffer bomb on the corresponding
+string. 
+
+Section 5 describes how to generate solutions for arbitrary userids
+and levels.
+
+------
+4.4.4. Additional Notes on the Online Buffer Lab
+------
+
+* If you want to build your own notifying bomb and hand it out
+  manually to your students (rather than having them use the request
+  server), then you should use the "./makebomb.pl" script:
+
+  unix> ./makebomb.pl -n
+
+  This creates the three binaries, ./src/bufbomb, ./src/hex2raw, and
+  ./src/makecookie, and copies them to ./buflab-handout/, which you can
+  then tar up and hand out to students.
+
+* All of the servers and daemons are stateless, so you can stop ("make
+  stop") and start ("make start") the lab as many times as you like
+  without any ill effects. If you accidentally kill one of the
+  daemons, or you modify a daemon, or the daemon dies for some reason,
+  then use "make stop" to clean up, and then restart with "make
+  start". If your Linux box crashes or reboots, simply restart the
+  daemons with "make start".
+
+* Information and error messages from the servers are appended to the
+  status log in buflab/log-status.txt. Servers run quietly, so they
+  can be started from initrc scripts at boot time.
+
+* Before going live with the students, we like to check everything out
+  by running some tests. We do this by typing
+
+    linux> make cleanallfiles   
+    linux> make start
+
+Then we request a buffer bomb for ourselves by pointing a Web browser at
+
+    http://$SERVER_NAME:$REQUESTD_PORT
+
+After saving our bomb to disk, we untar it, copy it to a host in the
+approved list in src/config.h, and then solve and submit different
+phases for different fake userids to make sure that they are properly
+recorded on the scoreboard, which we check at
+
+    http://$SERVER_NAME:$REQUESTD_PORT/scoreboard
+
+Once we're satisfied that everything is OK, we stop the lab
+
+    linux> make stop
+
+and then go live:
+
+    linux> make cleanallfiles
+    linux> make start
+        
+Once we go live, we type "make stop" and "make start" as often as we
+need to, but we are careful never to type "make cleanallfiles" again.
+
+----
+4.5. Running the Offline Buffer Lab
+----
+In this version of the lab, you build your own quiet buffer bombs
+manually and then hand them out to the students.  The students work on
+solving their bombs offline (i.e., independently of any autograding
+service) and then handin their exploit strings for each phase to you,
+which you then grade manually.
+
+Use the ./makebomb.pl script to build the quiet buffer bomb:
+
+    unix> ./makebomb.pl 
+
+This creates the three binaries ./src/bufbomb, ./src/hex2raw, and
+./src/makecookie, and copies them to the ./buflab-handout/ directory,
+which you can then tar up and hand out to students.
+
+The students will handin their solution files, which you can validate
+manually by feeding to the bomb:
+
+    unix> cd src
+    unix> cat <userid>-<level>.txt | ./hex2raw | ./bufbomb
+
+
+
+
+
+
+4. malloclab
+
+
+#####################################################################
+# CS:APP Malloc Lab
+# Handout files for students
+#
+# Copyright (c) 2002, R. Bryant and D. O'Hallaron, All rights reserved.
+# May not be used, modified, or copied without permission.
+#
+######################################################################
+
+***********
+Main Files:
+***********
+
+mm.{c,h}	
+	Your solution malloc package. mm.c is the file that you
+	will be handing in, and is the only file you should modify.
+
+mdriver.c	
+	The malloc driver that tests your mm.c file
+
+short{1,2}-bal.rep
+	Two tiny tracefiles to help you get started. 
+
+Makefile	
+	Builds the driver
+
+**********************************
+Other support files for the driver
+**********************************
+
+config.h	Configures the malloc lab driver
+fsecs.{c,h}	Wrapper function for the different timer packages
+clock.{c,h}	Routines for accessing the Pentium and Alpha cycle counters
+fcyc.{c,h}	Timer functions based on cycle counters
+ftimer.{c,h}	Timer functions based on interval timers and gettimeofday()
+memlib.{c,h}	Models the heap and sbrk function
+
+*******************************
+Building and running the driver
+*******************************
+To build the driver, type "make" to the shell.
+
+To run the driver on a tiny test trace:
+
+	unix> mdriver -V -f short1-bal.rep
+
+The -V option prints out helpful tracing and summary information.
+
+To get a list of the driver flags:
+
+	unix> mdriver -h
+
+
+
+
+
+
+
