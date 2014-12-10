@@ -18,6 +18,9 @@
  *  -----------------------------------
  * | s  s  s  s  ... s  s  s  0  0  a/f
  *  -----------------------------------
+ *
+ * I add the mm_check function and use it to check if the status of heap during code. But it influence 
+ * the Perf index score, so I comment it. 
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +42,6 @@ team_t team = {
     "Juan Li",
     /* First member's email address */
     "juanli2014@u.northwestern.edu",
-    /* Second member's full name (leave blank if none) */
 };
 
 /* single word (4) or double word (8) alignment */
@@ -105,8 +107,10 @@ team_t team = {
 /* max of x and y*/
 #define MAX(x, y) ((x) > (y)? (x) : (y))
 
-/*a pointer to the first block */
+/* A pointer to the first block */
 static void *mm_heap;
+
+/* Free block list */
 static void *mm_freelist;
 
 /*functions, internal helper*/
@@ -116,6 +120,9 @@ static void *coalesce(void *bp);               /*coalesce free blocks*/
 static void *extendHeap(size_t size);          /* extend heap*/
 static void insertNode(void *bp);              /* insert node to free list */
 static void deleteNode(void *bp);              /* delete node from free list */
+static int is_memory_inbounds(void *ptr);      /* check if a pointer in valid range of the heap*/
+static void mm_check(void);                     /* check the heap's consistency */
+static void check_mark_helper(void * current);  /* check helper, traverse the binary search tree to check he free block*/
 
 
 /* 
@@ -183,6 +190,9 @@ void *mm_malloc(size_t size)
     /* add block */
     addBlock(bp, newsize);
     
+    /* check the heap's consistency */
+    //mm_check();
+
     return bp;
    }
 
@@ -200,7 +210,6 @@ void mm_free(void *ptr)
     PUT(FOOTER(ptr), PACK(size, 0));
     insertNode(coalesce(ptr));
 
-    //printf("free.........\n          HEADER(ptr)%X \n        SIze:%d\n",HEADER(ptr),size );
 }
 
 /*
@@ -218,17 +227,17 @@ void *mm_realloc(void *ptr, size_t size)
         mm_free(ptr);
         return NULL;
     }
-    //printf("place 1\n");
+    
     /* if ptr doesn't exist, malloc */
     if(ptr == NULL) return mm_malloc(size);
-    //printf("place 2\n");
+    
     /* if ptr exist */
     newptr = mm_malloc(size);
-    //printf("place 3\n");
+  
     /* if fail to reallocate, return null */
     if (newptr == NULL)
       return NULL;
-    //printf("place 4\n");
+   
    // copySize = *(size_t *)((void *)oldptr - SIZE_T_SIZE);
     copySize = GET_SIZE(HEADER(ptr));
     
@@ -237,17 +246,17 @@ void *mm_realloc(void *ptr, size_t size)
     
     /* copy */
     memcpy(newptr, oldptr, copySize);
-    //printf("place 5\n");
+  
     /* free old block */
     mm_free(oldptr);
-    //printf("place 6\n");
+   
     return newptr;
 }
 
 /*
  * find_bestfit - Find a fit for a block with size bytes
  */
-static void *find_bestfit(size_t size)
+void *find_bestfit(size_t size)
 {
     // printf("Find best fit....");
     void *bp = NULL;
@@ -272,7 +281,7 @@ static void *find_bestfit(size_t size)
  * addBlock - add block of size bytes at start of free block bp
  * if the remain greater than minimal block size, split.
  */
-static void addBlock(void *bp, size_t size)
+void addBlock(void *bp, size_t size)
 {
     // printf("Add block....");
     size_t oldsize = GET_SIZE(HEADER(bp));
@@ -283,18 +292,15 @@ static void addBlock(void *bp, size_t size)
         PUT(HEADER(bp), PACK(size, 1));
         PUT(FOOTER(bp), PACK(size, 1));
 
-        //printf("before next bp\n");
+       
         bp = NEXT_BP(bp);
-        //printf("after next bp\n");
+        
 
         PUT(HEADER(bp), PACK(oldsize-size, 0));
-
-        //printf("header:%X\n, size:%d\n",HEADER(bp),GET_SIZE(HEADER(bp)));
         
 
         PUT(FOOTER(bp), PACK(oldsize-size, 0));
 
-        //printf("new bp %X\n header %X\n footer %X\n",bp,HEADER(bp),FOOTER(bp));
 
         insertNode(coalesce(bp));
 
@@ -302,8 +308,7 @@ static void addBlock(void *bp, size_t size)
     else {
         PUT(HEADER(bp), PACK(oldsize, 1));
         PUT(FOOTER(bp), PACK(oldsize, 1));
-        //printf("bp %X\n header %X\n footer %X\n     if is free%d\n",bp,HEADER(bp),FOOTER(bp),GET_ALLOC(HEADER(bp)));
-        //printf("      pack(size,1): %X\n       get(p):%X\n",PACK(size,1),GET(HEADER(bp)));
+   
 
     }
 }
@@ -311,7 +316,7 @@ static void addBlock(void *bp, size_t size)
 /*
  * extendHeap - if heap is full, extend heap with free block and return its block pointer
  */
-static void *extendHeap(size_t size)
+void *extendHeap(size_t size)
 {
     // printf("Extend heap....");
     void *bp;
@@ -338,15 +343,14 @@ static void *extendHeap(size_t size)
 /*
  * coalesce - coalesced block
  */
-static void *coalesce(void *bp)
+void *coalesce(void *bp)
 {
     // printf("coalesce.....bp:%X\n",bp);
     size_t prevBlock = GET_ALLOC(FOOTER(PREV_BP(bp)));
     size_t nextBlock = GET_ALLOC(HEADER(NEXT_BP(bp)));
 
     size_t size = GET_SIZE(HEADER(bp));
-    //printf("prev block:%X",prevBlock);
-    //printf("next block:%X",nextBlock);
+
     
     /* Case 1 */
     if (prevBlock && nextBlock) {
@@ -359,7 +363,7 @@ static void *coalesce(void *bp)
         size += GET_SIZE(HEADER(NEXT_BP(bp)));
         PUT(HEADER(bp), PACK(size, 0));
         PUT(FOOTER(bp), PACK(size, 0));
-        //printf("next free");
+    
         return bp;
     }
     /* Case 3 */
@@ -368,7 +372,7 @@ static void *coalesce(void *bp)
         size += GET_SIZE(HEADER(PREV_BP(bp)));
         PUT(HEADER(PREV_BP(bp)), PACK(size, 0));
         PUT(FOOTER(bp), PACK(size, 0));
-        //printf("prev free");
+       
         return(PREV_BP(bp));
     }
     /* Case 4 */
@@ -379,12 +383,91 @@ static void *coalesce(void *bp)
         GET_SIZE(FOOTER(NEXT_BP(bp)));
         PUT(HEADER(PREV_BP(bp)), PACK(size, 0));
         PUT(FOOTER(NEXT_BP(bp)), PACK(size, 0));
-        //printf("both free");
+      
         return(PREV_BP(bp));
     }
 }
 
-static void insertNode(void *bp){
+/*
+ * mm_check - A checker that scans the heap and checks it for consistency.
+ *
+ * Check the following:
+ *  -Is every block in the free list marked as free?
+ *  -Are there any contiguous free blocks that somehow escaped coalescing?
+ *  -Is every free block actually in the free list?
+ *  -Do the pointers in the free list point to valid free blocks?
+ *  -Do any allocated blocks overlap?
+ *  -Do the pointers in a heap block point to valid heap addresses?
+ */
+void mm_check(void)
+{
+    void *current = mm_freelist;
+
+    if(current == NULL) return;
+    //printf("begin checking, current is %x\n", current);
+
+    /* check if every block in the free list marked as free and check if every free block actually in the free list*/
+    check_mark_helper(current);
+
+    current = mm_heap;
+    void *previous = NULL;
+
+
+    /*Check if the pointers in a heap block point to valid heap addresses*/
+    while(is_memory_inbounds(current)){
+        /* Check if there any contiguous free blocks that somehow escaped coalescing*/
+
+        if(previous && (!GET_ALLOC(HEADER(previous))) && !GET_ALLOC(HEADER(current)))
+        {
+            printf("Blocks: %x and %x escaped coalescing\n", (unsigned int)current, (unsigned int)previous);
+        }
+
+         /* check if allocated block overlap */
+        if(previous && current < previous)
+        {
+            printf("Block: %x overlap with other block", (unsigned int)previous);
+        }
+
+        previous = current;
+        current = NEXT_BP(current);
+    }
+   
+    /* if no message during check, then Heap is consistent */
+}
+
+ /* check if every block in the free list marked as free and check if every free block actually in the free list*/
+void check_mark_helper(void * current){
+    if(current == NULL) return;
+     if(GET_ALLOC(HEADER(current)))
+        {
+            printf("Block: %x is in free list but marked allocated\n", (unsigned int)current);
+        }
+
+        /*check if every free block actually in the free list and  check if the pointers in the free list point to valid free blocks*/
+        if(GET_LEFT(current) && GET_ALLOC(HEADER(GET_LEFT(current))))
+        {
+            printf("Block: %x points to an allocated block\n",(unsigned int)current);
+        }
+         if(GET_RIGHT(current) && GET_ALLOC(HEADER(GET_RIGHT(current))))
+        {
+            printf("Block: %x points to an allocated block\n", (unsigned int)current);
+        }
+        check_mark_helper((void *)GET_LEFT(current));
+        check_mark_helper((void *)GET_RIGHT(current));
+}
+
+
+/*
+ *Check if memory in valid range
+ */
+int is_memory_inbounds(void *ptr)
+{
+    return (ptr >= mem_heap_lo() && ptr < mem_heap_hi());
+}
+
+
+/* insert an free block to the free list*/
+void insertNode(void *bp){
     // printf(" insert node ........\n");
     /* if mm_freelist is null*/
     if(mm_freelist == NULL){
@@ -482,8 +565,8 @@ static void insertNode(void *bp){
 }
 
 
-
-static void deleteNode(void *bp)
+/* delete a block from free list */
+void deleteNode(void *bp)
 {
     // printf(" delete node ....\n");
     /* bp has no brothers*/ 
@@ -601,19 +684,5 @@ static void deleteNode(void *bp)
     }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
